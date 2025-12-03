@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sqlite3
 
 def load_abc_file(filename: str):
     #Load ABC file into list of lines
@@ -11,6 +12,7 @@ def parse_tune(tune_lines: list[str]) -> dict:
     tune = {
         'id': None,       # X: reference number
         'title': None,    # T: first title only
+        'alt_titles' : [],# T: extra T lines
         'rhythm': None,   # R:
         'meter': None,    # M:
         'key': None,      # K:
@@ -29,8 +31,12 @@ def parse_tune(tune_lines: list[str]) -> dict:
 
         if raw.startswith("X:"):
             tune['id'] = raw[2:].strip()
-        elif raw.startswith("T:") and tune['title'] is None:
-            tune['title'] = raw[2:].strip()
+        elif raw.startswith("T:"):
+            title_text = raw[2:].strip()
+            if tune['title'] is None:
+                tune['title'] = title_text
+            else:
+                tune['alt_titles'].append(title_text)
         elif raw.startswith("R:"):
             tune['rhythm'] = raw[2:].strip().lower()
         elif raw.startswith("M:"):
@@ -101,4 +107,3 @@ tunes = parse_all_tunes(lines)
 df = pd.DataFrame(tunes)
 
 df = load_abc_files("abc_books")
-print(df[['id','title','rhythm','meter','key','tempo','source']].head())
