@@ -1,128 +1,79 @@
 import pandas as pd
 
-# Part 2: Read file
-def load_abc_file(filename):
+def load_abc_file(filename: str):
     """Load ABC file into list of lines"""
-    with open(filename, 'r', encoding='latin-1') as f:
-        lines = f.readlines()
+    with open(filename, 'r', encoding='utf-8', errors='replace') as f:
+        return f.readlines()
 
-        print(f"Number of lines : {len(lines)}")
-
-        print("first 20 lines:")
-        for line in lines[:20]:
-            print(line.rstrip())
-
-        print("last 10 lines:")
-        for line in lines[-10:]:
-            print(line.strip())
-    return lines
-
-# Part 3: Parse tunes
-def parse_tune(tune_lines):
-    """Parse a single tune from lines"""
+def parse_tune(tune_lines: list[str]) -> dict:
+    """Parse a single tune into a dictionary with features + notation"""
     tune = {
-        'X': None,
-        'title': None,
-        'alt_title': [],
-        'tune_type': None,
-        'key': None,
-        'notation': '\n'.join(tune_lines)
+        'id': None,       # X: reference number
+        'title': None,    # T: first title only
+        'rhythm': None,   # R:
+        'meter': None,    # M:
+        'key': None,      # K:
+        'tempo': None,    # Q:
+        'source': None,   # S:
+        'notation': ""    # all note lines after K:
     }
 
-    title_count = 0
-    
+    tune_started = False
+    notation_lines = []
+
     for line in tune_lines:
-        line = line.strip()
-        if not line:
+        raw = line.strip()
+        if not raw and not tune_started:
             continue
 
-        if line.startswith("X:"):
-            tune['X'] = line[2:].strip()
-        elif line.startswith("T:"):
-            title_count += 1
-            if title_count == 1:
-                tune['title'] = line[2:].strip()
-            else:
-                tune['alt_title'].append(line[2:].strip())
-        elif line.startswith("R:"):
-            tune['tune_type'] = line[2:].strip()
-        elif line.startswith("K:"):
-            tune['key'] = line[2:].strip()
+        if raw.startswith("X:"):
+            tune['id'] = raw[2:].strip()
+        elif raw.startswith("T:") and tune['title'] is None:
+            tune['title'] = raw[2:].strip()
+        elif raw.startswith("R:"):
+            tune['rhythm'] = raw[2:].strip().lower()
+        elif raw.startswith("M:"):
+            tune['meter'] = raw[2:].strip()
+        elif raw.startswith("K:"):
+            tune['key'] = raw[2:].strip()
+            tune_started = True
+        elif raw.startswith("Q:"):
+            tune['tempo'] = raw[2:].strip()
+        elif raw.startswith("S:"):
+            tune['source'] = raw[2:].strip()
+        elif body_started:
+            notation_lines.append(raw)
 
+    tune['notation'] = "\n".join(notation_lines)
     return tune
 
-
-
-def parse_all_tunes(lines):
+def parse_all_tunes(lines: list[str]) -> list[dict]:
     """Parse all tunes from lines"""
     tunes = []
     current_tune_lines = []
-    blank_count = 0
 
     for line in lines:
         line = line.rstrip()
-
-        if not line.strip():
-            blank_count = blank_count + 1
-
-        if line.startswith("X:"):
-            if current_tune_lines:
-                tune = parse_tune(current_tune_lines)
-                tunes.append(tune)
-                current_tune_lines = []
-
+        if line.startswith("X:") and current_tune_lines:
+            tunes.append(parse_tune(current_tune_lines))
+            current_tune_lines = []
         current_tune_lines.append(line)
 
     if current_tune_lines:
-        tune = parse_tune(current_tune_lines)
-        tunes.append(tune)
+        tunes.append(parse_tune(current_tune_lines))
 
-    #test
-    print(f"\nFound {blank_count} blank lines")
-    print(f"\nFound {len(tunes)} tunes")
-    print("\nFirst tune:")
-    print(tunes[1])
-    print("\nLast tune:")
-    print(tunes[-1])   
-    
+    print(f"Parsed {len(tunes)} tunes")
     return tunes
 
-# Load file
-lines = load_abc_file('data/oneills.abc')
-print(f"Loaded {len(lines)} lines")
-    
-# Parse tunes
+# === Example usage ===
+lines = load_abc_file('abc_books/1/hnair0.abc')
 tunes = parse_all_tunes(lines)
-print(f"Parsed {len(tunes)} tunes")
 
-#part 4   
-# Create DataFrame
 df = pd.DataFrame(tunes)
 
-# Print basic info
-print(df.shape)
-print(df.head())
-print(df.info())
+# Show metadata
+print(df[['id','title','rhythm','meter','key','tempo','source']].head())
 
-# Check for missing values
-print(df.isnull().sum())
-
-# What columns do we have?
-print(df.columns)
-    
-# Analysis
-print("\n=== TUNE TYPE COUNTS ===")
-# TODO: Your code here
-print("Amount of tunes")
-print(df['tune_type'].value_counts())
-    
-print("\n=== KEY COUNTS ===")
-# TODO: Your code here
-print(df['key'].value_counts())
-    
-print("\n=== ALCOHOLIC DRINKS IN TITLES ===")
-# TODO: Your code here
-alcohol = df['title'].str.contains(r'\bwhiskey\b|\bbrandy\b|\bbeer\b|\bale\b|\bwine\b|\bwhisky\b|\bpunch\b|\bporter\b|\brum\b|\bgin\b', case=False, na=False)
-print(f"There are {alcohol.sum()} tunes mentioning alcohol")
-print(df.loc[alcohol, ['X', 'title']])
-df.to_csv('parsed_tunes.csv', index=False)
+# Show notation preview
+print("\nNotation preview (first 10 lines of tune 1):\n")
+print("\n".join(df.loc[0, 'notation'].splitlines()[:10]))
