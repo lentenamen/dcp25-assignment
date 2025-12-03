@@ -70,13 +70,12 @@ def process_file(file_path: str) -> list[dict]:
     lines = load_abc_file(file_path)
     return parse_all_tunes(lines)
 
-def load_abc_files(abc_books: str) -> pd.DataFrame:
+def load_abc_files(root_folder: str) -> pd.DataFrame:
     all_tunes = []
-    books_dir = abc_books
 
     # Iterate over items in the root books_dir
-    for item in os.listdir(books_dir):
-        item_path = os.path.join(books_dir, item)
+    for item in os.listdir(root_folder):
+        item_path = os.path.join(root_folder, item)
 
         # Only look at numbered subdirectories
         if os.path.isdir(item_path) and item.isdigit():
@@ -93,7 +92,7 @@ def load_abc_files(abc_books: str) -> pd.DataFrame:
                     all_tunes.extend(tunes)
 
     df = pd.DataFrame(all_tunes)
-    print(f"\nLoaded {len(df)} tunes from {books_dir}")
+    print(f"\nLoaded {len(df)} tunes from {root_folder}")
     return df
 
 # === Example usage ===

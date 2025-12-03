@@ -1,1 +1,2 @@
-root_folder: str
+
+        item_path = os.path.join(books_dir, item)
