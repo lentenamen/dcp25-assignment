@@ -1,12 +1,13 @@
 import pandas as pd
+import os
 
 def load_abc_file(filename: str):
-    """Load ABC file into list of lines"""
+    #Load ABC file into list of lines
     with open(filename, 'r', encoding='utf-8', errors='replace') as f:
         return f.readlines()
 
 def parse_tune(tune_lines: list[str]) -> dict:
-    """Parse a single tune into a dictionary with features + notation"""
+    #Parse a single tune into a dictionary with features + notation
     tune = {
         'id': None,       # X: reference number
         'title': None,    # T: first title only
@@ -48,7 +49,7 @@ def parse_tune(tune_lines: list[str]) -> dict:
     return tune
 
 def parse_all_tunes(lines: list[str]) -> list[dict]:
-    """Parse all tunes from lines"""
+    #Parse all tunes from lines
     tunes = []
     current_tune_lines = []
 
@@ -62,18 +63,43 @@ def parse_all_tunes(lines: list[str]) -> list[dict]:
     if current_tune_lines:
         tunes.append(parse_tune(current_tune_lines))
 
-    print(f"Parsed {len(tunes)} tunes")
     return tunes
+
+def process_file(file_path: str) -> list[dict]:
+    #Helper to load and parse a single ABC file
+    lines = load_abc_file(file_path)
+    return parse_all_tunes(lines)
+
+def load_abc_files(abc_books: str) -> pd.DataFrame:
+    all_tunes = []
+    books_dir = abc_books
+
+    # Iterate over items in the root books_dir
+    for item in os.listdir(books_dir):
+        item_path = os.path.join(books_dir, item)
+
+        # Only look at numbered subdirectories
+        if os.path.isdir(item_path) and item.isdigit():
+            print(f"Found numbered directory: {item}")
+
+            # Iterate over files in that directory
+            for file in os.listdir(item_path):
+                if file.endswith('.abc'):
+                    file_path = os.path.join(item_path, file)
+                    print(f"  Found abc file: {file}")
+
+                    # Parse this file and extend the master list
+                    tunes = process_file(file_path)
+                    all_tunes.extend(tunes)
+
+    df = pd.DataFrame(all_tunes)
+    print(f"\nLoaded {len(df)} tunes from {books_dir}")
+    return df
 
 # === Example usage ===
 lines = load_abc_file('abc_books/1/hnair0.abc')
 tunes = parse_all_tunes(lines)
-
 df = pd.DataFrame(tunes)
 
-# Show metadata
+df = load_abc_files("abc_books")
 print(df[['id','title','rhythm','meter','key','tempo','source']].head())
-
-# Show notation preview
-print("\nNotation preview (first 10 lines of tune 1):\n")
-print("\n".join(df.loc[1, 'notation'].splitlines()[:10]))
