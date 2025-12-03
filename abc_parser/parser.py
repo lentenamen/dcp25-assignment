@@ -41,7 +41,7 @@ def parse_tune(tune_lines: list[str]) -> dict:
             tune['tempo'] = raw[2:].strip()
         elif raw.startswith("S:"):
             tune['source'] = raw[2:].strip()
-        elif body_started:
+        elif tune_started:
             notation_lines.append(raw)
 
     tune['notation'] = "\n".join(notation_lines)
@@ -76,4 +76,4 @@ print(df[['id','title','rhythm','meter','key','tempo','source']].head())
 
 # Show notation preview
 print("\nNotation preview (first 10 lines of tune 1):\n")
-print("\n".join(df.loc[0, 'notation'].splitlines()[:10]))
+print("\n".join(df.loc[1, 'notation'].splitlines()[:10]))
