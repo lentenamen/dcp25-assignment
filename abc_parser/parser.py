@@ -12,7 +12,7 @@ def parse_tune(tune_lines: list[str]) -> dict:
     tune = {
         'id': None,       # X: reference number
         'title': None,    # T: first title only
-        'alt_titles' : [],# T: extra T lines
+        'alt_titles' :[], # T: extra T lines
         'rhythm': None,   # R:
         'meter': None,    # M:
         'key': None,      # K:
@@ -107,3 +107,49 @@ tunes = parse_all_tunes(lines)
 df = pd.DataFrame(tunes)
 
 df = load_abc_files("abc_books")
+
+print(df[['id','title','rhythm','meter','key','tempo','source','alt_titles']].head())
+# Convert DataFrame rows into list of dicts
+tunes = df.to_dict(orient="records")
+
+# Connect to SQLite
+conn = sqlite3.connect("abc_tunes.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS tunes (
+    id TEXT PRIMARY KEY,
+    title TEXT,
+    alt_titles TEXT,
+    rhythm TEXT,
+    meter TEXT,
+    key TEXT,
+    tempo TEXT,
+    source TEXT,
+    notation TEXT
+)
+""")
+
+# Insert parsed tunes
+for tune in tunes:
+    cursor.execute("""
+    INSERT OR REPLACE INTO tunes (id, title,alt_titles, rhythm, meter, key, tempo, source, notation)
+    VALUES (?,?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        tune['id'],
+        tune['title'],
+        ", ".join(tune['alt_titles']),  # join list into string
+        tune['rhythm'],
+        tune['meter'],
+        tune['key'],
+        tune['tempo'],
+        tune['source'],
+        tune['notation']
+    ))
+
+conn.commit()
+rows = cursor.fetchall()
+for row in rows:
+    print(row)
+conn.close()
+print("Done inserting", len(tunes), "tunes")
