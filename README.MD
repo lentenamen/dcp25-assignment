@@ -18,9 +18,13 @@ Student Number:
 
 | Files | Source |
 |-----------|-----------|
-| main.py | Self written |
+| parser.py | Self written |
 | test.py | Modified from [reference]() |
+| tkintertst.py | From [reference]() |
 | test.py | From [reference]() |
+| test.py | From [reference]() |
+| test.py | From [reference]() |
+
 
 # References
 * Item 1

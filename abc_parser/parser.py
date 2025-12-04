@@ -93,9 +93,32 @@ def load_abc_files(root_folder: str) -> pd.DataFrame:
     print(f"\nLoaded {len(df)} tunes from {root_folder}")
     return df
 
+# --- Analysis Functions ---
+def get_tunes_by_book(df: pd.DataFrame, book_number: int) -> pd.DataFrame:
+    #Get all tunes from a specific book
+    return df[df['book_number'] == book_number]
+
+def get_tunes_by_type(df: pd.DataFrame, tune_type: str) -> pd.DataFrame:
+    #Get all tunes of a specific rhythm/type
+    return df[df['rhythm'].str.lower() == tune_type.lower()]
+
+def search_tunes(df: pd.DataFrame, search_term: str) -> pd.DataFrame:
+    #Search tunes by title (case insensitive)
+    return df[df['title'].str.contains(search_term, case=False, na=False)]
+
 # --- Database Setup ---
 df = load_abc_files("abc_books")
 tunes = df.to_dict(orient="records")
+
+print("\n5 from Book 1 ")
+print(get_tunes_by_book(df, 1)[["id", "title"]].head(5))
+
+print("\n5 Reel Tunes")
+print(get_tunes_by_type(df, "reel")[["id", "title", "rhythm"]].head(5))
+
+print("\nSearch Results for 'boyle'")
+print(search_tunes(df, "boyle")[["id", "title"]].head(5))
+
 
 conn = sqlite3.connect("abc_tunes.db")
 cursor = conn.cursor()
