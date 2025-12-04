@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect("abc_tunes.db")
+conn = sqlite3.connect("tunes.db")
 cursor = conn.cursor()
 
 cursor.execute("DROP TABLE tunes")
