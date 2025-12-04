@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 import sqlite3
+import tkinter as tk
+from tkinter import ttk
 
 def load_abc_file(filename: str):
     #Load ABC file into list of lines
@@ -118,7 +120,7 @@ cursor = conn.cursor()
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tunes (
-    id TEXT PRIMARY KEY,
+    id TEXT KEY,
     title TEXT,
     alt_titles TEXT,
     rhythm TEXT,
@@ -133,18 +135,18 @@ CREATE TABLE IF NOT EXISTS tunes (
 # Insert parsed tunes
 for tune in tunes:
     cursor.execute("""
-    INSERT OR REPLACE INTO tunes (id, title,alt_titles, rhythm, meter, key, tempo, source, notation)
-    VALUES (?,?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO tunes (id, title, alt_titles, rhythm, meter, key, tempo, source, notation)
+    VALUES (?,?,?,?,?,?,?,?,?)
     """, (
-        tune['id'],
-        tune['title'],
-        ", ".join(tune['alt_titles']),  # join list into string
-        tune['rhythm'],
-        tune['meter'],
-        tune['key'],
-        tune['tempo'],
-        tune['source'],
-        tune['notation']
+        tune['id'] or "",        
+        tune['title'] or "",
+        ", ".join(tune['alt_titles']),
+        tune['rhythm'] or "",
+        tune['meter'] or "",
+        tune['key'] or "",
+        tune['tempo'] or "",
+        tune['source'] or "",
+        tune['notation'] or ""
     ))
 
 conn.commit()
