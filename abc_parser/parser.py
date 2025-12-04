@@ -106,11 +106,10 @@ def load_abc_files(root_folder: str) -> pd.DataFrame:
 # === Example usage ===
 lines = load_abc_file('abc_books/1/hnair0.abc')
 tunes = parse_all_tunes(lines)
-df = pd.DataFrame(tunes)
 
 df = load_abc_files("abc_books")
 
-print(df[['id','title','rhythm','meter','key','tempo','source','alt_titles']].head())
+#print(df[['id','title','rhythm','meter','key','tempo','source','alt_titles']].head())
 # Convert DataFrame rows into list of dicts
 tunes = df.to_dict(orient="records")
 
@@ -153,5 +152,86 @@ conn.commit()
 rows = cursor.fetchall()
 for row in rows:
     print(row)
-conn.close()
+
 print("Done inserting", len(tunes), "tunes")
+# --- Tkinter GUI ---
+root = tk.Tk()
+root.title("ABC Tunes Viewer")
+root.geometry("900x600")
+
+# Search + Sort controls
+top = tk.Frame(root, padx=5, pady=5)
+top.pack(fill="x")
+
+search_entry = tk.Entry(top, width=30)
+search_entry.pack(side="left", padx=5)
+
+def load_data(query="", sort_col=None):
+    for row in tree.get_children():
+        tree.delete(row)
+    sql = "SELECT id,title,alt_titles,rhythm,meter,key,tempo,source FROM tunes"
+    params = []
+    if query:
+        q = f"%{query}%"
+        sql += " WHERE title LIKE ? OR alt_titles LIKE ? OR rhythm LIKE ? OR key LIKE ?"
+        params = [q,q,q,q]
+    if sort_col:
+        sql += f" ORDER BY {sort_col} COLLATE NOCASE"
+    for row in cursor.execute(sql, params):
+        tree.insert("", "end", values=row)
+
+def filter_data():
+    load_data(search_entry.get().strip(), sort_var.get())
+
+def clear_filter():
+    search_entry.delete(0, tk.END)
+    load_data()
+
+tk.Button(top, text="Filter", command=filter_data).pack(side="left")
+tk.Button(top, text="Clear", command=clear_filter).pack(side="left", padx=5)
+
+sort_var = tk.StringVar(value="title")
+sort_menu = tk.OptionMenu(top, sort_var, "title","rhythm","meter","key","tempo","source")
+sort_menu.pack(side="left", padx=5)
+
+tk.Button(top, text="Sort", command=filter_data).pack(side="left")
+
+# Table
+cols = ("ID","Title","Alt Titles","Rhythm","Meter","Key","Tempo","Source")
+tree = ttk.Treeview(root, columns=cols, show="headings", height=15)
+for c in cols:
+    tree.heading(c, text=c)
+    tree.column(c, width=100)
+tree.pack(fill="both", expand=True)
+
+# Details
+details = tk.Text(root, wrap="word", height=10)
+details.pack(fill="both", expand=True)
+
+def show_details(_):
+    sel = tree.selection()
+    if sel:
+        tune_id = tree.item(sel[0])["values"][0]
+        tune = cursor.execute("SELECT * FROM tunes WHERE id=?", (tune_id,)).fetchone()
+        if tune:
+            details.delete("1.0", tk.END)
+            details.insert(tk.END, "\n".join([
+                f"ID: {tune[0]}",
+                f"Title: {tune[1]}",
+                f"Alt Titles: {tune[2]}",
+                f"Rhythm: {tune[3]}",
+                f"Meter: {tune[4]}",
+                f"Key: {tune[5]}",
+                f"Tempo: {tune[6]}",
+                f"Source: {tune[7]}",
+                "",
+                f"Notation:\n{tune[8]}"
+            ]))
+
+tree.bind("<<TreeviewSelect>>", show_details)
+
+# Initial load
+load_data()
+
+root.mainloop()
+conn.close()
