@@ -168,6 +168,7 @@ for tune in tunes:
 conn.commit()
 
 # --- Tkinter GUI ---
+#main window
 root = tk.Tk()
 root.title("ABC Tunes Viewer")
 root.geometry("1000x650")
@@ -176,15 +177,19 @@ root.geometry("1000x650")
 top = tk.Frame(root, padx=5, pady=5)
 top.pack(fill="x")
 
+#creates label that says search
 tk.Label(top, text="Search:").pack(side="left")
+#search input box
 search_entry = tk.Entry(top, width=25)
 search_entry.pack(side="left", padx=5)
 
+#sort label & dropdown
 tk.Label(top, text="Sort by:").pack(side="left", padx=(10, 0))
-sort_var = tk.StringVar(value="title")
+sort_var = tk.StringVar(value="title") # stores selection
 sort_menu = tk.OptionMenu(top, sort_var, "title", "rhythm", "meter", "key", "tempo", "source", "book_number")
 sort_menu.pack(side="left", padx=5)
 
+#clears table pulls matching tables into database and inserts into database
 def load_data(query="", sort_col=None):
     # Clears and reloads table data based on filter and sort selection
     for row in tree.get_children():
@@ -201,21 +206,27 @@ def load_data(query="", sort_col=None):
         params = [q, q, q, q]
     if sort_col:
         sql += f" ORDER BY {sort_col} COLLATE NOCASE"
+    #each database record becomes a row in the table
     for row in cursor.execute(sql, params):
         tree.insert("", "end", values=row)
 
+#reads sort text and sort column and reloads it with the results
 tk.Button(top, text="Filter", command=lambda: load_data(search_entry.get().strip(), sort_var.get())).pack(side="left", padx=5)
+#clears filters reloads everythign
 tk.Button(top, text="Clear", command=lambda: (search_entry.delete(0, tk.END), load_data())).pack(side="left")
 
-# Table
+# Table that displays all the cols
 cols = ("Book", "ID", "Title", "Alt Titles", "Rhythm", "Meter", "Key", "Tempo", "Source")
 tree = ttk.Treeview(root, columns=cols, show="headings", height=15)
+#set col headers
 for c in cols:
     tree.heading(c, text=c)
     tree.column(c, width=110)
+#display table
 tree.pack(fill="both", expand=True)
 
 # Details
+#displays full music notation
 details = tk.Text(root, wrap="word", height=10)
 details.pack(fill="both", expand=True)
 
@@ -225,8 +236,10 @@ def show_details(_):
     if not selected:
         return
     tune_id = tree.item(selected[0])["values"][1]
+    #get full record from db
     tune = cursor.execute("SELECT * FROM tunes WHERE id=?", (tune_id,)).fetchone()
     if tune:
+        #display details in text box
         details.delete("1.0", tk.END)
         details.insert(tk.END, "\n".join([
             f"ID: {tune[0]}",
@@ -243,6 +256,7 @@ def show_details(_):
 
 tree.bind("<<TreeviewSelect>>", show_details)# Bind table clicks to the detail viewer
 
+#START
 load_data()# Load all data initially
 root.mainloop()# Start the GUI application loop
 conn.close()# Close the database connection
