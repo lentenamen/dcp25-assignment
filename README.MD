@@ -41,8 +41,9 @@ Main window is created. Search and sort controls are created. User clicks filter
 * [TKinter & sqlite ui](https://www.youtube.com/watch?v=gdDI_GhIRGo)
 * [Parser](https://github.com/skooter500/dcp25)
 * [Parser](https://github.com/lentenamen/DCP_C24383676)
+* [Whole playlist](https://www.youtube.com/watch?v=fEBzetetV94&list=PLs3IFJPw3G9KL3huzPS7g-0PCbS7Auc7I&index=2)
 * [MORE TKINTER](https://www.w3schools.com/python/ref_module_tkinter.asp)
-
+* [BROCODE for TKINTER](https://www.youtube.com/watch?v=TuLxsvK4svQ)
 
 
 # What I am most proud of in the assignment
@@ -51,7 +52,7 @@ Making the gui was the hardest but in my opinion the most fun due to my parser b
 
 # What I learned
 
-I learned that making something like this modularly worked well but calling functions inside off functions needed a lot of bandwidth in my brain. 
+I learned that making something like this modularly worked well but calling functions inside off functions needed a lot of bandwidth in my brain to process everything. Overall it was fairly complicated but I think the way I did the parsing was the most efficient even if I had to draw maps for my functions. I think that in hindsight making a CLI is probably a lot easier than a GUI so I might do that next time.
 
 ## Below is how to use Markdown. You can delete this:
 
