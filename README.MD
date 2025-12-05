@@ -7,6 +7,9 @@ Name:Allen Lapitan
 Student Number: C24383676
 
 # Screenshots
+![UI](https://github.com/lentenamen/dcp25-assignment/blob/main/images/dcp1.png)
+![UI showing all of info](https://github.com/lentenamen/dcp25-assignment/blob/main/images/dcp2.png)
+![Search bar works](https://github.com/lentenamen/dcp25-assignment/blob/main/images/dcp3.png)
 
 # Description of the project
 Program designed to read 2 folders containing ABC files representing different books in a main folder abc_books. The program parses and stores the tunes in a dictionary which then gets stored into a list. A database is created using sqlite and is used to store a table with all of the contents in the abc_books. This data is accessed using a GUI. Pandas was used to create a dataframe to store all of the tunes.
@@ -48,7 +51,7 @@ Making the gui was the hardest but in my opinion the most fun due to my parser b
 
 # What I learned
 
-I learned that making something like this modularly worked well but calling functions inside off functions needed a lot of bandwidth in my brain.
+I learned that making something like this modularly worked well but calling functions inside off functions needed a lot of bandwidth in my brain. 
 
 ## Below is how to use Markdown. You can delete this:
 
