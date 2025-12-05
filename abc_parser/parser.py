@@ -7,6 +7,7 @@ from tkinter import ttk
 # --- ABC Parsing ---
 def load_abc_file(filename: str):
     #Load ABC file into list of lines
+    # 'errors=replace' prevents crashes if bad characters exist
     with open(filename, 'r', encoding='utf-8', errors='replace') as f:
         return f.readlines()
 
@@ -27,8 +28,10 @@ def parse_tune(tune_lines: list[str], book_number: int) -> dict:
     tune_started = False
     notation_lines = []
 
+    # Loop through each line in the tune
     for line in tune_lines:
         raw = line.strip()
+        # Ignore empty lines before the tune starts
         if not raw and not tune_started:
             continue
         if raw.startswith("X:"):
@@ -51,8 +54,10 @@ def parse_tune(tune_lines: list[str], book_number: int) -> dict:
         elif raw.startswith("S:"):
             tune['source'] = raw[2:].strip()
         elif tune_started:
+            # All remaining lines after K: are musical notes
             notation_lines.append(raw)
 
+    # Combine all music notation lines into one block
     tune['notation'] = "\n".join(notation_lines)
     return tune
 
@@ -80,6 +85,7 @@ def load_abc_files(root_folder: str) -> pd.DataFrame:
     all_tunes = []
     for item in os.listdir(root_folder):
         item_path = os.path.join(root_folder, item)
+        # Each folder represents a different book number
         if os.path.isdir(item_path) and item.isdigit():
             book_number = int(item)  # starts at 0
             print(f"Found numbered directory: {item}")
@@ -89,6 +95,7 @@ def load_abc_files(root_folder: str) -> pd.DataFrame:
                     print(f"  Found abc file: {file}")
                     tunes = process_file(file_path, book_number)
                     all_tunes.extend(tunes)
+    # Convert all collected tunes into a DataFrame
     df = pd.DataFrame(all_tunes)
     print(f"\nLoaded {len(df)} tunes from {root_folder}")
     return df
@@ -110,6 +117,7 @@ def search_tunes(df: pd.DataFrame, search_term: str) -> pd.DataFrame:
 df = load_abc_files("abc_books")
 tunes = df.to_dict(orient="records")
 
+#function calling
 print("\n5 from Book 1 ")
 print(get_tunes_by_book(df, 1)[["id", "title"]].head(5))
 
@@ -119,10 +127,11 @@ print(get_tunes_by_type(df, "reel")[["id", "title", "rhythm"]].head(5))
 print("\nSearch Results for 'boyle'")
 print(search_tunes(df, "boyle")[["id", "title"]].head(5))
 
-
+# Create SQLite database
 conn = sqlite3.connect("abc_tunes.db")
 cursor = conn.cursor()
 
+# Create database table if it doesn't already exist
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tunes (
     id TEXT PRIMARY KEY,
@@ -138,6 +147,7 @@ CREATE TABLE IF NOT EXISTS tunes (
 )
 """)
 
+# Insert all tunes into the database
 for tune in tunes:
     cursor.execute("""
     INSERT OR REPLACE INTO tunes (id, title, alt_titles, rhythm, meter, key, tempo, source, notation, book_number)
@@ -154,6 +164,7 @@ for tune in tunes:
         tune['notation'] or "",
         tune['book_number']
     ))
+# Save database changes
 conn.commit()
 
 # --- Tkinter GUI ---
@@ -175,6 +186,7 @@ sort_menu = tk.OptionMenu(top, sort_var, "title", "rhythm", "meter", "key", "tem
 sort_menu.pack(side="left", padx=5)
 
 def load_data(query="", sort_col=None):
+    # Clears and reloads table data based on filter and sort selection
     for row in tree.get_children():
         tree.delete(row)
     sql = """SELECT book_number, id, title, alt_titles, rhythm, meter, key, tempo, source 
@@ -208,6 +220,7 @@ details = tk.Text(root, wrap="word", height=10)
 details.pack(fill="both", expand=True)
 
 def show_details(_):
+    # Displays full tune information when a row is selected
     selected = tree.selection()
     if not selected:
         return
@@ -228,8 +241,8 @@ def show_details(_):
             f"Book: {tune[9]}"
         ]))
 
-tree.bind("<<TreeviewSelect>>", show_details)
+tree.bind("<<TreeviewSelect>>", show_details)# Bind table clicks to the detail viewer
 
-load_data()
-root.mainloop()
-conn.close()
+load_data()# Load all data initially
+root.mainloop()# Start the GUI application loop
+conn.close()# Close the database connection
